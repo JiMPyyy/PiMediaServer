@@ -22,3 +22,6 @@ Start Nodejs
 visit [r[aspi.](https://raspi.jonahtech.org/)](https://raspi.jonahtech.org/)
 This is hosted by cloudflare with a secure HTTPS connection
 
+
+Manaully run email script to view specs
+1. run /home/jimp/system_email/email_script  (Change email to your own to get emails sent.)
