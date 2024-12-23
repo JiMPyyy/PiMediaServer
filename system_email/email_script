@@ -1,0 +1,77 @@
+import smtplib
+import psutil
+import socket
+import platform
+import time
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime, timedelta  # <-- Import timedelta directly
+
+# Your email details
+SMTP_SERVER = 'smtp.gmail.com'  # For Gmail
+SMTP_PORT = 587
+SENDER_EMAIL = 'pottejaers@gmail.com'  # Change to your email
+RECEIVER_EMAIL = 'pottejae@gmail.com'  # Change to your recipient email
+SENDER_PASSWORD = 'mftb efcb loht wyqj'  # Use an app password for Gmail, not your main password
+
+# Get memory usage
+def get_memory_info():
+    memory = psutil.virtual_memory()
+    return f"Total Memory: {memory.total / (1024 ** 3):.2f} GB\n" \
+           f"Available Memory: {memory.available / (1024 ** 3):.2f} GB\n" \
+           f"Used Memory: {memory.used / (1024 ** 3):.2f} GB\n" \
+           f"Memory Usage: {memory.percent}%"
+
+# Get CPU usage
+def get_cpu_temperature():
+    try:
+        # Reading the temperature from the Raspberry Pi's system file
+        # This may vary depending on your platform; the below path works for most Raspberry Pi setups
+        with open('/sys/class/thermal/thermal_zone0/temp', 'r') as temp_file:
+            temperature = int(temp_file.read()) / 1000.0  # Convert from millidegree to Celsius
+        return f"CPU Temperature: {temperature:.1f}°C"
+    except FileNotFoundError:
+        # If the temperature file isn't found, return an error message
+        return "CPU Temperature: Not available" 
+
+# Get system info (using platform and psutil)
+def get_system_info():
+    uname_info = platform.uname()
+    uptime_seconds = time.time() - psutil.boot_time()
+    uptime_str = str(timedelta(seconds=uptime_seconds))  # Now correctly using timedelta
+    
+    return f"System: {uname_info.system} {uname_info.release} {uname_info.version}\n" \
+           f"Hostname: {socket.gethostname()}\n" \
+           f"Uptime: {uptime_str}"
+
+# Create the email message
+def send_email(subject, body):
+    msg = MIMEMultipart()
+    msg['From'] = SENDER_EMAIL
+    msg['To'] = RECEIVER_EMAIL
+    msg['Subject'] = subject
+
+    # Attach the body with the msg instance
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Send the email via Gmail's SMTP server
+    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+        server.starttls()
+        server.login(SENDER_EMAIL, SENDER_PASSWORD)
+        text = msg.as_string()
+        server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, text)
+        print(f"Email sent to {RECEIVER_EMAIL}")
+
+# Combine all information into one message
+def get_report():
+    memory_info = get_memory_info()
+    system_info = get_system_info()
+    cpu_temp = get_cpu_temperature()
+    return f"System Report for {socket.gethostname()}\n\n{system_info}\n\n{memory_info}\n\n{cpu_temp}"
+
+# Send the email with the system and memory report
+if __name__ == '__main__':
+    subject = f"Raspberry Pi System Report - {socket.gethostname()} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    body = get_report()
+    send_email(subject, body)
+    

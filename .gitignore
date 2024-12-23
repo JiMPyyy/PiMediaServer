@@ -1,0 +1,15 @@
+# Ignore Python virtual environments
+camera-app/venv/
+
+# Ignore PyTorch lib files in the virtual environment
+camera-app/venv/lib/python3.11/site-packages/torch/lib/*
+
+# Ignore Python bytecode files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore system-specific files
+.DS_Store
+Thumbs.db
+
